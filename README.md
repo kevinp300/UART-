@@ -15,12 +15,14 @@ rx: Received serial data input for the receiver module.
 rx_en: Reception enable input for the receiver module.
 parity: Parity bit input (0 for even, 1 for odd, 2 for no parity) for the receiver module.
 stop_bits: Number of stop bits input (0 for 1 stop bit, 1 for 1.5 stop bits, 2 for 2 stop bits) for the receiver module.
+
 Outputs:
 
 tx: Transmitted serial data output from the transmitter module.
 txc: Transmission complete output from the transmitter module.
 data: Received data output from the receiver module.
 rxc: Reception complete output from the receiver module.
+
 Internal Signals:
 
 uart_data: 10-bit data register (including start, data, parity, and stop bits) in the transmitter module.
@@ -29,13 +31,15 @@ count: 4-bit counter for data and stop bits in the transmitter module.
 parity: 3-bit parity bit in the transmitter module.
 stop_bits: 3-bit number of stop bits in the transmitter module.
 flow_ctrl: 3-bit flow control option in the transmitter module.
-States:
 
+
+States:
 IDLE: 3-bit state representing the idle state in both transmitter and receiver modules.
 START: 3-bit state representing the start bit state in the transmitter module.
 DATA: 3-bit state representing the data bit state in the transmitter module.
 PARITY: 3-bit state representing the parity bit state in the transmitter module.
 STOP: 3-bit state representing the stop bit state in the transmitter module.
+
 Functionality:
 
 The transmitter module (uart_tx) takes input data, generates serial data with start, data, parity, and stop bits, and outputs it through the tx signal. It uses a finite state machine (FSM) to control the timing of the transmission.
