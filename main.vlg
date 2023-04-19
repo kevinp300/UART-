@@ -1,0 +1,82 @@
+module uart_tx(
+  input logic clk,            // Clock input
+  input logic rst_n,         // Reset input (active low)
+  input logic [7:0] data,    // Parallel data input
+  output logic tx,           // Serial data output
+  output logic tx_en         // Transmit enable output
+);
+
+  // Internal state and counters
+  logic [3:0] state;
+  logic [3:0] count;
+  logic [3:0] bit_count;
+
+  // Register for storing data to be transmitted
+  logic [7:0] data_reg;
+
+  // Baud rate generator for generating clock for serial data transmission
+  baud_rate_generator #(.CLK_PERIOD(10), .BAUD_RATE(9600)) brg(
+    .clk(clk),
+    .rst_n(rst_n),
+    .tx_clk(tx_en)
+  );
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+      state <= 4'b0000;     // Reset state to idle
+    else if (tx_en)        // If transmission enabled
+      state <= count ? state : 4'b0000; // Advance state if not counting
+    else if (state != 4'b0000)
+      state <= 4'b0000;     // Reset state to idle if transmission disabled
+  end
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+      count <= 0;           // Reset count to zero
+    else if (tx_en)        // If transmission enabled
+      count <= count + 1;  // Increment count
+  end
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+      bit_count <= 0;      // Reset bit count to zero
+    else if (tx_en)       // If transmission enabled
+      bit_count <= (count == 0) ? 4'b0000 : bit_count + 1; // Increment bit count
+  end
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+      data_reg <= 0;       // Reset data register to zero
+    else if (tx_en)       // If transmission enabled
+      data_reg <= (bit_count == 0) ? data : data_reg >> 1; // Shift data register
+  end
+
+  assign tx = state[0];   // Output current bit of data register
+  assign tx_en = (state != 4'b0000); // Output transmit enable
+
+endmodule
+
+module uart_rx(
+  input logic clk,            // Clock input
+  input logic rst_n,         // Reset input (active low)
+  input logic rx,            // Serial data input
+  output logic [7:0] data,   // Parallel data output
+  output logic rx_en         // Receive enable output
+);
+
+  // Internal state and counters
+  logic [3:0] state;
+  logic [3:0] count;
+  logic [3:0] bit_count;
+
+  // Register for storing received data
+  logic [7:0] data_reg;
+
+  // Baud rate generator for generating clock for serial data reception
+  baud_rate_generator #(.CLK_PERIOD(10), .BAUD_RATE(9600)) brg(
+    .clk(clk),
+    .rst_n(rst_n),
+    .rx_clk(rx)
+  );
+
+  always_ff @(posedge
